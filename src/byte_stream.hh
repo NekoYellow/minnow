@@ -27,7 +27,8 @@ protected:
   uint64_t l_;
   uint64_t r_;
   uint64_t n_ {};
-  uint64_t tot_ {};
+  uint64_t tot_pushed_ {};
+  uint64_t tot_popped_ {};
   bool closed_ {};
   bool error_ {};
 };

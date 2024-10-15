@@ -25,7 +25,7 @@ void Writer::push( string data )
     if (r_ == capacity_) r_ = 0;
   }
   n_ += n;
-  tot_ += n;
+  tot_pushed_ += n;
 }
 
 void Writer::close()
@@ -40,35 +40,41 @@ uint64_t Writer::available_capacity() const
 
 uint64_t Writer::bytes_pushed() const
 {
-  return tot_;
+  return tot_pushed_;
 }
 
 bool Reader::is_finished() const
 {
-  // Your code here.
-  return {};
+  return closed_ && !n_;
 }
 
 uint64_t Reader::bytes_popped() const
 {
-  // Your code here.
-  return {};
+  return tot_popped_;
 }
 
 string_view Reader::peek() const
 {
-  // Your code here.
-  return {};
+  if (!n_) return {};
+  else if (l_ < r_) return {s_.begin() + l_, s_.begin() + r_};
+  else return string{s_.begin() + l_, s_.end()} + string{s_.begin(), s_.begin() + r_};
 }
 
 void Reader::pop( uint64_t len )
 {
-  // Your code here.
-  (void)len;
+  if (len > n_) {
+    set_error();
+    return;
+  }
+  for (uint64_t i = 0; i < len; i++) {
+    l_++;
+    if (l_ == capacity_) l_ = 0;
+  }
+  n_ -= len;
+  tot_popped_ += len;
 }
 
 uint64_t Reader::bytes_buffered() const
 {
-  // Your code here.
-  return {};
+  return n_;
 }
