@@ -22,8 +22,13 @@ public:
   bool has_error() const { return error_; }; // Has the stream had an error?
 
 protected:
-  // Please add any additional state to the ByteStream here, and not to the Writer and Reader interfaces.
   uint64_t capacity_;
+  std::string s_;
+  uint64_t l_;
+  uint64_t r_;
+  uint64_t n_ {};
+  uint64_t tot_ {};
+  bool closed_ {};
   bool error_ {};
 };
 

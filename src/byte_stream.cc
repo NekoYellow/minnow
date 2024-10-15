@@ -2,36 +2,45 @@
 
 using namespace std;
 
-ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {}
+ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ), s_(' ', capacity), l_(0), r_(0) {}
 
 bool Writer::is_closed() const
 {
-  // Your code here.
-  return {};
+  return closed_;
 }
 
 void Writer::push( string data )
 {
-  // Your code here.
-  (void)data;
-  return;
+  if (is_closed()) {
+    set_error();
+    return;
+  }
+  uint64_t n = data.size();
+  if (n > available_capacity()) {
+    set_error();
+    return;
+  }
+  for (uint64_t i = 0; i < n; i++) {
+    s_[r_++] = data[i];
+    if (r_ == capacity_) r_ = 0;
+  }
+  n_ += n;
+  tot_ += n;
 }
 
 void Writer::close()
 {
-  // Your code here.
+  closed_ = true;
 }
 
 uint64_t Writer::available_capacity() const
 {
-  // Your code here.
-  return {};
+  return capacity_ - n_;
 }
 
 uint64_t Writer::bytes_pushed() const
 {
-  // Your code here.
-  return {};
+  return tot_;
 }
 
 bool Reader::is_finished() const
