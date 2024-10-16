@@ -2,7 +2,9 @@
 
 using namespace std;
 
-ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {}
+ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {
+  q_.reserve( capacity );
+}
 
 bool Writer::is_closed() const
 {
@@ -12,14 +14,13 @@ bool Writer::is_closed() const
 void Writer::push( string data )
 {
   if (is_closed()) {
-    set_error();
+    // set_error();
     return;
   }
   uint64_t len = min(data.size(), available_capacity());
   if (len == 0) return;
-  for (uint64_t i = 0; i < len; i++) {
-    q_.push(data[i]);
-  }
+  data.resize(len);
+  copy(begin(data), end(data), back_inserter(q_));
   tot_pushed_ += len;
 }
 
@@ -50,19 +51,14 @@ uint64_t Reader::bytes_popped() const
 
 string_view Reader::peek() const
 {
-  if (!bytes_buffered()) return {};
-  return {&q_.front(), 1};
+  return {q_.data(), q_.size()};
 }
 
 void Reader::pop( uint64_t len )
 {
-  if (len > bytes_buffered()) {
-    len = bytes_buffered();
-  }
+  len = min(len, bytes_buffered());
+  q_.erase(begin(q_), begin(q_) + len);
   tot_popped_ += len;
-  for (; len; len--) {
-    q_.pop();
-  }
 }
 
 uint64_t Reader::bytes_buffered() const

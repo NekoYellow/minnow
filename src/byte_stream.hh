@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
-#include <queue>
+#include <vector>
 
 class Reader;
 class Writer;
@@ -24,7 +24,7 @@ public:
 
 protected:
   uint64_t capacity_;
-  std::queue<char> q_ {};
+  std::vector<char> q_ {};
   uint64_t tot_pushed_ {};
   uint64_t tot_popped_ {};
   bool closed_ {};
