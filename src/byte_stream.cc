@@ -2,7 +2,7 @@
 
 using namespace std;
 
-ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ), s_(' ', capacity), l_(0), r_(0) {}
+ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ), s_(capacity, ' '), l_(0), r_(0) {}
 
 bool Writer::is_closed() const
 {
@@ -15,17 +15,13 @@ void Writer::push( string data )
     set_error();
     return;
   }
-  uint64_t n = data.size();
-  if (n > available_capacity()) {
-    set_error();
-    return;
-  }
-  for (uint64_t i = 0; i < n; i++) {
+  uint64_t len = min(data.size(), available_capacity());
+  for (uint64_t i = 0; i < len; i++) {
     s_[r_++] = data[i];
     if (r_ == capacity_) r_ = 0;
   }
-  n_ += n;
-  tot_pushed_ += n;
+  n_ += len;
+  tot_pushed_ += len;
 }
 
 void Writer::close()
@@ -56,8 +52,13 @@ uint64_t Reader::bytes_popped() const
 string_view Reader::peek() const
 {
   if (!n_) return {};
-  else if (l_ < r_) return {s_.begin() + l_, s_.begin() + r_};
-  else return string{s_.begin() + l_, s_.end()} + string{s_.begin(), s_.begin() + r_};
+  string res;
+  for (uint64_t i = 0; i < n_; i++) {
+    res += s_[(l_ + i) % capacity_];
+  }
+  return res;
+  // else if (l_ < r_) return {s_.begin() + l_, s_.begin() + r_};
+  // else return string{s_.begin() + l_, s_.end()} + string{s_.begin(), s_.begin() + r_};
 }
 
 void Reader::pop( uint64_t len )
