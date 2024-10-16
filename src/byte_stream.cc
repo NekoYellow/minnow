@@ -2,7 +2,7 @@
 
 using namespace std;
 
-ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ), s_(capacity, ' '), l_(0), r_(0) {}
+ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {}
 
 bool Writer::is_closed() const
 {
@@ -16,11 +16,10 @@ void Writer::push( string data )
     return;
   }
   uint64_t len = min(data.size(), available_capacity());
+  if (len == 0) return;
   for (uint64_t i = 0; i < len; i++) {
-    s_[r_++] = data[i];
-    if (r_ == capacity_) r_ = 0;
+    q_.push(data[i]);
   }
-  n_ += len;
   tot_pushed_ += len;
 }
 
@@ -31,7 +30,7 @@ void Writer::close()
 
 uint64_t Writer::available_capacity() const
 {
-  return capacity_ - n_;
+  return capacity_ - q_.size();
 }
 
 uint64_t Writer::bytes_pushed() const
@@ -41,7 +40,7 @@ uint64_t Writer::bytes_pushed() const
 
 bool Reader::is_finished() const
 {
-  return closed_ && !n_;
+  return writer().is_closed() && bytes_buffered() == 0;
 }
 
 uint64_t Reader::bytes_popped() const
@@ -51,31 +50,22 @@ uint64_t Reader::bytes_popped() const
 
 string_view Reader::peek() const
 {
-  if (!n_) return {};
-  string res;
-  for (uint64_t i = 0; i < n_; i++) {
-    res += s_[(l_ + i) % capacity_];
-  }
-  return res;
-  // else if (l_ < r_) return {s_.begin() + l_, s_.begin() + r_};
-  // else return string{s_.begin() + l_, s_.end()} + string{s_.begin(), s_.begin() + r_};
+  if (!bytes_buffered()) return {};
+  return {&q_.front(), 1};
 }
 
 void Reader::pop( uint64_t len )
 {
-  if (len > n_) {
-    set_error();
-    return;
+  if (len > bytes_buffered()) {
+    len = bytes_buffered();
   }
-  for (uint64_t i = 0; i < len; i++) {
-    l_++;
-    if (l_ == capacity_) l_ = 0;
-  }
-  n_ -= len;
   tot_popped_ += len;
+  for (; len; len--) {
+    q_.pop();
+  }
 }
 
 uint64_t Reader::bytes_buffered() const
 {
-  return n_;
+  return q_.size();
 }
