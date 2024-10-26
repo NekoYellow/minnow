@@ -4,21 +4,21 @@ using namespace std;
 
 void Reassembler::insert( uint64_t first_index, string data, bool is_last_substring )
 {
-  uint64_t lim = next_ + writer().available_capacity(), n = data.size();
+  uint64_t lim = next_ + writer().available_capacity();
+  uint64_t l = first_index, r = first_index + data.size();
   if (is_last_substring) {
-    len_ = min(len_, first_index + n);
+    len_ = min(len_, r);
   }
-  if (first_index >= lim) {
+  if (l >= lim) {
     return; // unacceptable
   }
-  if (first_index + n > lim) {
-    n = lim - first_index; // cut off unacceptable part
+  r = min(r, lim); // cut off unacceptable part
+
+  uint64_t start = max(next_, l);
+  for (uint64_t i = start; i < r; i++) {
+    mp_[i] = data[i - l];
   }
 
-  for (uint64_t i = max(0l, (int64_t)next_ - (int64_t)first_index); i < n; i++) {
-    mp_[first_index + i] = data[i];
-  }
-  
   while (mp_.size() && mp_.begin()->first == next_) {
     writer().push(string(1, mp_.begin()->second));
     next_++;
