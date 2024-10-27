@@ -16,7 +16,30 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
 
   uint64_t start = max(next_, l);
   for (uint64_t i = start; i < r; i++) {
+    auto p = seg_.lower_bound(i);
+    if (p != seg_.end() && p->first == i) {
+      i = p->second;
+    } else if (p != seg_.begin()) {
+      auto [pl, pr] = *(--p);
+      i = max(i, pr);
+    }
+    if (i >= r) break;
     mp_[i] = data[i - l];
+  }
+
+  while (true) {
+    auto p = seg_.upper_bound(start);
+    if (p == seg_.end()) break;
+    auto [pl, pr] = *p;
+    if (pr <= r) seg_.extract(p);
+  }
+
+  auto p = seg_.lower_bound(start);
+  if (p != seg_.end() && p->first == start) {
+    seg_[start] = max(p->second, r);
+  } else if (p != seg_.begin()) {
+    auto [pl, pr] = *(--p);
+    if (pr >= start) seg_[pl] = max(pr, r);
   }
 
   while (mp_.size() && mp_.begin()->first == next_) {
