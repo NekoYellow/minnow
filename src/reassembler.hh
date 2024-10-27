@@ -1,13 +1,16 @@
 #pragma once
 
-#include <map>
 #include "byte_stream.hh"
+
+#include <string>
+#include <list>
+#include <utility>
 
 class Reassembler
 {
 public:
   // Construct Reassembler to write into given ByteStream.
-  explicit Reassembler( ByteStream&& output ) : next_(0), len_(-1), mp_(), seg_(), output_( std::move( output ) ) {}
+  explicit Reassembler( ByteStream&& output ) : eof_(-1), output_( std::move( output ) ) {}
 
   /*
    * Insert a new substring to be reassembled into a ByteStream.
@@ -42,11 +45,13 @@ public:
   const Writer& writer() const { return output_.writer(); }
 
 private:
-  uint64_t next_; // the next position to be written to output
-  uint64_t len_; // length of the total stream
-  std::map<uint64_t, char> mp_; // the bufferred substrings
-  std::map<uint64_t, uint64_t> seg_; // begin -> end
+  std::list<std::pair<uint64_t, std::string>> buffer_ {}; // list for bs with custom condition
+  uint64_t num_bytes_ {}; // number of bytes buffered
+  uint64_t next_ {}; // the next position to be written to output
+  uint64_t eof_; // eof position
   ByteStream output_; // the Reassembler writes to this ByteStream
 
   Writer& writer() { return output_.writer(); }
+  void emit( uint64_t first_index, std::string data ); // emit data to output stream
+  void cache( uint64_t first_index, std::string data ); // cache data in buffer
 };
