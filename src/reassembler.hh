@@ -51,7 +51,6 @@ private:
   uint64_t eof_; // eof position
   ByteStream output_; // the Reassembler writes to this ByteStream
 
-  Writer& writer() { return output_.writer(); }
   void emit( uint64_t first_index, std::string data ); // emit data to output stream
   void cache( uint64_t first_index, std::string data ); // cache data in buffer
 };

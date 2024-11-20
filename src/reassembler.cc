@@ -44,10 +44,10 @@ void Reassembler::emit( uint64_t pos, string data )
     data.erase( 0, next_ - pos ); // cut off duplicate part
   }
   next_ += data.size();
-  writer().push( move( data ) );
+  output_.writer().push( move( data ) );
 
   if ( next_ >= eof_ ) {
-    writer().close();
+    output_.writer().close();
     num_bytes_ = 0;
   }
 }
