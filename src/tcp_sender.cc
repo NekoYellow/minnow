@@ -16,10 +16,8 @@ uint64_t TCPSender::consecutive_retransmissions() const
 void TCPSender::push( const TransmitFunction& transmit )
 {
   // If the window is full, no new data can be sent
-
-  window_size_ = window_size_ ? window_size_ : 1;
-
-  if ( num_seqno_in_flight_ >= window_size_ ) {
+  if ( ( window_size_ && num_seqno_in_flight_ >= window_size_ )
+       || ( window_size_ == 0 && num_seqno_in_flight_ >= 1 ) ) {
     return;
   }
 
@@ -27,7 +25,8 @@ void TCPSender::push( const TransmitFunction& transmit )
   auto seqno = Wrap32::wrap( ackno_, isn_ );
 
   // Compute available window size
-  uint64_t win = window_size_ - num_seqno_in_flight_ - ( seqno == isn_ );
+  uint64_t win
+    = window_size_ == 0 ? 1 : window_size_ - num_seqno_in_flight_ - ( seqno == isn_ );
 
   string out;
   // Read data from the stream into the outgoing buffer
@@ -53,7 +52,8 @@ void TCPSender::push( const TransmitFunction& transmit )
 
     // Append a FIN flag if all data has been sent and the stream is closed
     if ( !finished_ && writer().is_closed() && len == view.size()
-         && ( num_seqno_in_flight_ + message.sequence_length() < window_size_ ) ) {
+         && ( num_seqno_in_flight_ + message.sequence_length() < window_size_
+              || ( window_size_ == 0 && message.sequence_length() == 0 ) ) ) {
       finished_ = message.FIN = true;
     }
 
